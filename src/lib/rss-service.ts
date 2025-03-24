@@ -89,15 +89,37 @@ const convertRssItemToArticle = (item: CustomItem, source: string): NewsArticle 
   };
 };
 
-// Helper function to fetch a single feed
+// Helper function to fetch a single feed using a proxy service
 const fetchFeed = async (url: string): Promise<CustomFeed | null> => {
   try {
-    // Create a new parser instance with options
-    const parser = new Parser<CustomFeed, CustomItem>(parserOptions);
+    // Use a free RSS to JSON proxy service to avoid CORS issues and browser compatibility problems
+    const rssToJsonServiceUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
     
-    // Instead of using a CORS proxy which might be causing issues, use direct fetch
-    // Most modern RSS feeds allow CORS access
-    const feed = await parser.parseURL(url);
+    const response = await fetch(rssToJsonServiceUrl);
+    const data = await response.json();
+    
+    if (data.status !== 'ok') {
+      throw new Error(`RSS feed returned status: ${data.status}`);
+    }
+    
+    // Convert the RSS2JSON format to our CustomFeed format
+    const feed: CustomFeed = {
+      title: data.feed.title,
+      link: data.feed.link,
+      items: data.items.map((item: any) => {
+        return {
+          title: item.title,
+          link: item.link,
+          content: item.content,
+          contentSnippet: item.description,
+          guid: item.guid || item.link,
+          categories: item.categories,
+          isoDate: item.pubDate,
+          creator: item.author,
+        };
+      }),
+    };
+    
     return feed;
   } catch (error) {
     console.error(`Error fetching feed from ${url}:`, error);
