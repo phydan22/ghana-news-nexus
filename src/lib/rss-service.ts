@@ -89,15 +89,15 @@ const convertRssItemToArticle = (item: CustomItem, source: string): NewsArticle 
   };
 };
 
-// Helper function to fetch a single feed with CORS proxy
+// Helper function to fetch a single feed
 const fetchFeed = async (url: string): Promise<CustomFeed | null> => {
   try {
-    // Create a new parser instance for each request to avoid state issues
+    // Create a new parser instance with options
     const parser = new Parser<CustomFeed, CustomItem>(parserOptions);
     
-    // Use a CORS proxy to fetch the RSS feed
-    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
-    const feed = await parser.parseURL(corsProxy + url);
+    // Instead of using a CORS proxy which might be causing issues, use direct fetch
+    // Most modern RSS feeds allow CORS access
+    const feed = await parser.parseURL(url);
     return feed;
   } catch (error) {
     console.error(`Error fetching feed from ${url}:`, error);
