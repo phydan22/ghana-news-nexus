@@ -1,22 +1,62 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import NewsCard from '@/components/NewsCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { sampleArticles, categories } from '@/lib/data';
+import { fetchAllFeeds } from '@/lib/rss-service';
 import { Search } from 'lucide-react';
+import { NewsArticle } from '@/lib/data';
+import { useToast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Fetch news from RSS feeds
+  useEffect(() => {
+    const loadFeeds = async () => {
+      try {
+        setIsLoading(true);
+        const feedArticles = await fetchAllFeeds();
+        
+        if (feedArticles.length > 0) {
+          setArticles(feedArticles);
+        } else {
+          // Fall back to sample data if no articles were fetched
+          setArticles(sampleArticles);
+          toast({
+            title: "Using sample data",
+            description: "We couldn't fetch the latest news, so we're showing sample articles instead.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error loading feeds:', error);
+        setArticles(sampleArticles);
+        toast({
+          title: "Connection error",
+          description: "Failed to load news feeds. Using sample data instead.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFeeds();
+  }, [toast]);
   
   // Get the featured article (most recent)
-  const featuredArticle = sampleArticles[0];
+  const featuredArticle = articles.length > 0 ? articles[0] : null;
   
   // Get the rest of the articles
-  const recentArticles = sampleArticles.slice(1);
+  const recentArticles = articles.slice(1, 7);
   
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
@@ -79,35 +119,57 @@ const Index = () => {
       {/* Featured Article */}
       <section className="pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <h2 className="text-2xl font-semibold mb-6">Featured Story</h2>
-        <NewsCard
-          id={featuredArticle.id}
-          title={featuredArticle.title}
-          excerpt={featuredArticle.excerpt}
-          category={featuredArticle.category}
-          imageUrl={featuredArticle.imageUrl}
-          publishedAt={featuredArticle.publishedAt}
-          source={featuredArticle.source}
-          variant="featured"
-        />
+        
+        {isLoading ? (
+          <div className="w-full h-64 bg-secondary animate-pulse rounded-lg"></div>
+        ) : featuredArticle ? (
+          <NewsCard
+            id={featuredArticle.id}
+            title={featuredArticle.title}
+            excerpt={featuredArticle.excerpt}
+            category={featuredArticle.category}
+            imageUrl={featuredArticle.imageUrl}
+            publishedAt={featuredArticle.publishedAt}
+            source={featuredArticle.source}
+            variant="featured"
+          />
+        ) : (
+          <div className="text-center p-8 bg-secondary rounded-lg">
+            <p className="text-muted-foreground">No featured stories available at the moment.</p>
+          </div>
+        )}
       </section>
       
       {/* Recent Articles */}
       <section className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <h2 className="text-2xl font-semibold mb-6">Latest News</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {recentArticles.map((article) => (
-            <NewsCard
-              key={article.id}
-              id={article.id}
-              title={article.title}
-              excerpt={article.excerpt}
-              category={article.category}
-              imageUrl={article.imageUrl}
-              publishedAt={article.publishedAt}
-              source={article.source}
-            />
-          ))}
-        </div>
+        
+        {isLoading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 bg-secondary animate-pulse rounded-lg"></div>
+            ))}
+          </div>
+        ) : recentArticles.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {recentArticles.map((article) => (
+              <NewsCard
+                key={article.id}
+                id={article.id}
+                title={article.title}
+                excerpt={article.excerpt}
+                category={article.category}
+                imageUrl={article.imageUrl}
+                publishedAt={article.publishedAt}
+                source={article.source}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center p-8 bg-secondary rounded-lg">
+            <p className="text-muted-foreground">No recent articles available at the moment.</p>
+          </div>
+        )}
         
         <div className="mt-10 text-center">
           <Button variant="outline" size="lg" onClick={() => navigate('/categories')}>

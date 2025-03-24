@@ -1,145 +1,151 @@
 
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import NewsCard from '@/components/NewsCard';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { sampleArticles, categories } from '@/lib/data';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { fetchAllFeeds } from '@/lib/rss-service';
+import { NewsArticle } from '@/lib/data';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Categories = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [filteredArticles, setFilteredArticles] = useState(sampleArticles);
-  
+  const [searchParams] = useSearchParams();
+  const selectedCategory = searchParams.get('cat') || '';
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<NewsArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Fetch news from RSS feeds
   useEffect(() => {
-    // Get category from URL query params
-    const searchParams = new URLSearchParams(location.search);
-    const catParam = searchParams.get('cat');
-    
-    if (catParam) {
-      const category = categories.find(c => c.slug === catParam);
-      if (category) {
-        setSelectedCategory(category.name);
+    const loadFeeds = async () => {
+      try {
+        setIsLoading(true);
+        const feedArticles = await fetchAllFeeds();
+        
+        if (feedArticles.length > 0) {
+          setArticles(feedArticles);
+        } else {
+          // Fall back to sample data if no articles were fetched
+          setArticles(sampleArticles);
+          toast({
+            title: "Using sample data",
+            description: "We couldn't fetch the latest news, so we're showing sample articles instead.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error loading feeds:', error);
+        setArticles(sampleArticles);
+        toast({
+          title: "Connection error",
+          description: "Failed to load news feeds. Using sample data instead.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      setSelectedCategory(null);
-    }
-  }, [location.search]);
-  
+    };
+
+    loadFeeds();
+  }, [toast]);
+
+  // Filter articles by selected category
   useEffect(() => {
-    // Filter articles based on selected category and search term
-    let filtered = [...sampleArticles];
-    
     if (selectedCategory) {
-      filtered = filtered.filter(article => article.category === selectedCategory);
-    }
-    
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        article => 
-          article.title.toLowerCase().includes(term) ||
-          article.excerpt.toLowerCase().includes(term) ||
-          article.content.toLowerCase().includes(term)
+      const categoryName = categories.find(c => c.slug === selectedCategory)?.name || '';
+      setFilteredArticles(
+        articles.filter(article => 
+          article.category.toLowerCase() === categoryName.toLowerCase() || 
+          article.category.toLowerCase() === selectedCategory.toLowerCase()
+        )
       );
+    } else {
+      setFilteredArticles(articles);
     }
-    
-    setFilteredArticles(filtered);
-  }, [selectedCategory, searchTerm]);
-  
-  // Handle search
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  }, [selectedCategory, articles]);
+
+  const getCategoryInfo = () => {
+    return categories.find(c => c.slug === selectedCategory) || {
+      name: 'All Categories',
+      description: 'Browse all news articles from across Ghana',
+      count: filteredArticles.length
+    };
   };
-  
-  // Handle category selection
-  const handleCategorySelect = (categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
-    if (category) {
-      navigate(`/categories?cat=${category.slug}`);
-    }
-  };
-  
-  // Clear filters
-  const clearFilters = () => {
-    setSearchTerm('');
-    navigate('/categories');
-  };
-  
+
+  const categoryInfo = getCategoryInfo();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1 pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 animate-fade-in">
           <div className="mb-10">
-            <h1 className="text-3xl font-bold mb-2">
-              {selectedCategory ? `${selectedCategory} News` : 'All Categories'}
-            </h1>
-            <p className="text-muted-foreground">
-              {selectedCategory 
-                ? `Browse the latest ${selectedCategory.toLowerCase()} news from across Ghana` 
-                : 'Browse news articles by category or search for specific topics'}
+            <h1 className="text-3xl font-bold mb-2">{categoryInfo.name}</h1>
+            <p className="text-muted-foreground mb-6">
+              {categoryInfo.description}
             </p>
-          </div>
-          
-          {/* Search and filter */}
-          <div className="mb-8">
-            <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  type="search"
-                  placeholder="Search articles..."
-                  className="pl-10 w-full"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <Button type="submit" variant="default">Search</Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={clearFilters}
-                  className="px-3"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span className="sr-only">Clear filters</span>
-                </Button>
-              </div>
-            </form>
             
-            {/* Categories */}
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
+            {/* Category filter buttons */}
+            <div className="overflow-x-auto pb-4">
+              <div className="flex space-x-2 min-w-max">
                 <Button
-                  key={category.id}
-                  variant={selectedCategory === category.name ? "default" : "outline"}
+                  key="all"
+                  variant={!selectedCategory ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleCategorySelect(category.name)}
-                  className="mb-2"
+                  className="whitespace-nowrap"
+                  onClick={() => {
+                    const params = new URLSearchParams();
+                    window.history.pushState({}, '', `/categories?${params.toString()}`);
+                    setFilteredArticles(articles);
+                  }}
                 >
-                  {category.name}
-                  <span className="ml-1 text-xs opacity-70">({category.count})</span>
+                  All Categories
                 </Button>
-              ))}
+                {categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.slug ? "default" : "outline"}
+                    size="sm"
+                    className="whitespace-nowrap"
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      params.set('cat', category.slug);
+                      window.history.pushState({}, '', `/categories?${params.toString()}`);
+                      setFilteredArticles(
+                        articles.filter(article => 
+                          article.category.toLowerCase() === category.name.toLowerCase() || 
+                          article.category.toLowerCase() === category.slug.toLowerCase()
+                        )
+                      );
+                    }}
+                  >
+                    {category.name}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
           
-          {/* Results */}
-          <div className="mb-6">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredArticles.length} articles
-            </p>
-          </div>
-          
-          {filteredArticles.length > 0 ? (
+          {/* Articles grid */}
+          {isLoading ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-64 bg-secondary animate-pulse rounded-lg"></div>
+              ))}
+            </div>
+          ) : filteredArticles.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredArticles.map((article) => (
                 <NewsCard
@@ -155,18 +161,59 @@ const Categories = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">No articles found</h3>
-              <p className="text-muted-foreground mb-6">
-                Try adjusting your search or filter to find what you're looking for.
+            <div className="text-center p-10 bg-secondary rounded-lg">
+              <p className="text-lg mb-2">No articles found</p>
+              <p className="text-muted-foreground">
+                There are currently no articles in this category. Please check back later or explore other categories.
               </p>
-              <Button onClick={clearFilters}>
-                Clear Filters
-              </Button>
             </div>
           )}
         </div>
       </main>
+      
+      {/* Categories Overview - Summary table */}
+      {!selectedCategory && (
+        <section className="py-12 px-4 sm:px-6 lg:px-8 bg-secondary">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-2xl font-semibold mb-6">Categories Overview</h2>
+            <div className="bg-background rounded-lg overflow-hidden">
+              <Table>
+                <TableCaption>A list of all news categories</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Articles</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category) => {
+                    const count = articles.filter(
+                      article => article.category.toLowerCase() === category.name.toLowerCase() || 
+                                article.category.toLowerCase() === category.slug.toLowerCase()
+                    ).length;
+                    
+                    return (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium">
+                          <a 
+                            href={`/categories?cat=${category.slug}`}
+                            className="hover:text-primary transition-colors"
+                          >
+                            {category.name}
+                          </a>
+                        </TableCell>
+                        <TableCell>{category.description}</TableCell>
+                        <TableCell className="text-right">{count}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </section>
+      )}
       
       {/* Simplified footer */}
       <footer className="py-6 px-4 sm:px-6 lg:px-8 bg-background border-t text-center text-sm text-muted-foreground">
