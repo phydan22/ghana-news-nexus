@@ -17,6 +17,7 @@ type CustomItem = {
       url: string;
     }
   };
+  'content:encoded'?: string; // Add this field to match the custom field declaration
 };
 
 type CustomFeed = {
@@ -31,7 +32,7 @@ const parser: Parser<CustomFeed, CustomItem> = new Parser({
     item: [
       'media:content',
       'creator',
-      'content:encoded',
+      ['content:encoded', 'content:encoded'], // Fix: Use an array format to map the field correctly
       'content',
     ],
   },
