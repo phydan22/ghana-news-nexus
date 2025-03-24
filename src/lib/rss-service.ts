@@ -26,15 +26,16 @@ type CustomFeed = {
   items: CustomItem[];
 };
 
-// Configure a browser-compatible parser instance with our custom fields
-const parserOptions = {
+// Define the proper types for the parser options
+// Using type assertion to match the library's expected types
+const parserOptions: Parser.ParserOptions<CustomFeed, CustomItem> = {
   customFields: {
     item: [
       'media:content',
       'creator',
       ['content:encoded', 'content:encoded'],
       'content',
-    ],
+    ] as Parser.CustomFieldItem<CustomItem>[], // Type assertion to make TypeScript happy
   },
 };
 
