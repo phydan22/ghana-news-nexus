@@ -22,8 +22,8 @@ export interface Category {
 export const sampleArticles: NewsArticle[] = [
   {
     id: '1',
-    title: 'Ghana's Economy Shows Signs of Recovery Amid Global Challenges',
-    excerpt: 'Recent economic indicators suggest Ghana's economy is beginning to stabilize after a challenging period of inflation and currency depreciation.',
+    title: "Ghana's Economy Shows Signs of Recovery Amid Global Challenges",
+    excerpt: "Recent economic indicators suggest Ghana's economy is beginning to stabilize after a challenging period of inflation and currency depreciation.",
     content: `
       <p>Ghana's economy is showing promising signs of recovery, according to the latest data released by the Ghana Statistical Service. After months of grappling with high inflation rates and currency depreciation, several key indicators are now pointing toward stabilization and potential growth.</p>
       
@@ -80,8 +80,8 @@ export const sampleArticles: NewsArticle[] = [
   },
   {
     id: '3',
-    title: 'Ghana's Parliament Passes New Renewable Energy Bill',
-    excerpt: 'A landmark bill to boost investment in renewable energy projects has been passed by Ghana's Parliament, aiming to position the country as a leader in clean energy in West Africa.',
+    title: "Ghana's Parliament Passes New Renewable Energy Bill",
+    excerpt: "A landmark bill to boost investment in renewable energy projects has been passed by Ghana's Parliament, aiming to position the country as a leader in clean energy in West Africa.",
     content: `
       <p>Ghana's Parliament has passed a landmark Renewable Energy Amendment Bill, designed to accelerate the country's transition to clean energy and attract significant investment in the sector.</p>
       
@@ -168,7 +168,7 @@ export const sampleArticles: NewsArticle[] = [
   {
     id: '6',
     title: 'Major Healthcare Initiative Launched to Combat Malaria in Northern Ghana',
-    excerpt: 'A new public-private partnership aims to reduce malaria cases by 60% in Ghana's Northern Region through innovative prevention and treatment approaches.',
+    excerpt: "A new public-private partnership aims to reduce malaria cases by 60% in Ghana's Northern Region through innovative prevention and treatment approaches.",
     content: `
       <p>A comprehensive healthcare initiative aimed at dramatically reducing malaria cases in Ghana's Northern Region was officially launched yesterday in Tamale, marking one of the country's most ambitious public health campaigns in recent years.</p>
       
@@ -198,8 +198,8 @@ export const sampleArticles: NewsArticle[] = [
   },
   {
     id: '7',
-    title: 'Ghana's Cocoa Farmers Embrace Sustainable Farming Practices',
-    excerpt: 'A growing movement among Ghana's cocoa farmers is adopting organic and sustainable farming methods to improve yields and combat climate change impacts.',
+    title: "Ghana's Cocoa Farmers Embrace Sustainable Farming Practices",
+    excerpt: "A growing movement among Ghana's cocoa farmers is adopting organic and sustainable farming methods to improve yields and combat climate change impacts.",
     content: `
       <p>A significant shift is underway across Ghana's cocoa-growing regions as more farmers embrace sustainable and organic farming practices, moving away from conventional methods that have dominated the industry for decades.</p>
       
@@ -230,7 +230,7 @@ export const sampleArticles: NewsArticle[] = [
   {
     id: '8',
     title: 'International Film Festival to Showcase Ghanaian Cinema',
-    excerpt: 'The upcoming Accra International Film Festival will feature the largest selection of Ghanaian films in its history, highlighting the growing global interest in the country's cinema.',
+    excerpt: "The upcoming Accra International Film Festival will feature the largest selection of Ghanaian films in its history, highlighting the growing global interest in the country's cinema.",
     content: `
       <p>The Accra International Film Festival (AIFF) has announced that its upcoming eighth edition will feature the largest selection of Ghanaian films in the event's history, signaling growing international recognition for the country's cinema.</p>
       
@@ -263,14 +263,14 @@ export const categories: Category[] = [
     id: '1',
     name: 'Politics',
     slug: 'politics',
-    description: 'Latest news on Ghana's political landscape, government policies, and national governance.',
+    description: "Latest news on Ghana's political landscape, government policies, and national governance.",
     count: 12
   },
   {
     id: '2',
     name: 'Business',
     slug: 'business',
-    description: 'Updates on Ghana's economy, local businesses, entrepreneurship, and financial markets.',
+    description: "Updates on Ghana's economy, local businesses, entrepreneurship, and financial markets.",
     count: 15
   },
   {
@@ -305,7 +305,7 @@ export const categories: Category[] = [
     id: '7',
     name: 'Education',
     slug: 'education',
-    description: 'News on educational policies, institutions, achievements, and challenges in Ghana's education sector.',
+    description: "News on educational policies, institutions, achievements, and challenges in Ghana's education sector.",
     count: 6
   },
   {
