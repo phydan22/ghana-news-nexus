@@ -17,7 +17,7 @@ type CustomItem = {
       url: string;
     }
   };
-  'content:encoded'?: string; // Add this field to match the custom field declaration
+  'content:encoded'?: string;
 };
 
 type CustomFeed = {
@@ -26,17 +26,17 @@ type CustomFeed = {
   items: CustomItem[];
 };
 
-// Create a new RSS parser instance
-const parser: Parser<CustomFeed, CustomItem> = new Parser({
+// Configure a browser-compatible parser instance with our custom fields
+const parserOptions = {
   customFields: {
     item: [
       'media:content',
       'creator',
-      ['content:encoded', 'content:encoded'], // Fix: Use an array format to map the field correctly
+      ['content:encoded', 'content:encoded'],
       'content',
     ],
   },
-});
+};
 
 // List of RSS feed URLs from Ghanaian news sources
 const FEED_URLS = [
@@ -79,7 +79,7 @@ const convertRssItemToArticle = (item: CustomItem, source: string): NewsArticle 
     id: item.guid || item.link,
     title: item.title,
     excerpt: item.contentSnippet || '',
-    content: item.content || '',
+    content: item.content || item['content:encoded'] || '',
     category: getCategory(item),
     imageUrl: getImageUrl(item),
     publishedAt: item.isoDate ? new Date(item.isoDate) : new Date(),
@@ -88,17 +88,34 @@ const convertRssItemToArticle = (item: CustomItem, source: string): NewsArticle 
   };
 };
 
+// Helper function to fetch a single feed with CORS proxy
+const fetchFeed = async (url: string): Promise<CustomFeed | null> => {
+  try {
+    // Create a new parser instance for each request to avoid state issues
+    const parser = new Parser<CustomFeed, CustomItem>(parserOptions);
+    
+    // Use a CORS proxy to fetch the RSS feed
+    const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+    const feed = await parser.parseURL(corsProxy + url);
+    return feed;
+  } catch (error) {
+    console.error(`Error fetching feed from ${url}:`, error);
+    return null;
+  }
+};
+
 // Fetch RSS feeds from all sources and convert to NewsArticle[]
 export const fetchAllFeeds = async (): Promise<NewsArticle[]> => {
   try {
     const allPromises = FEED_URLS.map(async (url) => {
       try {
-        const feed = await parser.parseURL(url);
-        const source = feed.title || new URL(url).hostname;
+        const feed = await fetchFeed(url);
+        if (!feed) return [];
         
+        const source = feed.title || new URL(url).hostname;
         return feed.items.map(item => convertRssItemToArticle(item, source));
       } catch (error) {
-        console.error(`Error fetching feed from ${url}:`, error);
+        console.error(`Error processing feed from ${url}:`, error);
         return [];
       }
     });
