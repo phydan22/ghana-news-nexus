@@ -42,7 +42,7 @@ const parserOptions: Parser.ParserOptions<CustomFeed, CustomItem> = {
 // List of RSS feed URLs from Ghanaian news sources
 const FEED_URLS = [
   // 'https://www.myjoyonline.com/feed/', - Removed as requested
-  'https://ghanaiantimes.com.gh/feed/',
+  // 'https://ghanaiantimes.com.gh/feed/', - Removed as requested
   'https://accramail.com/feed/',
   'https://www.pulse.com.gh/rss'
 ];
